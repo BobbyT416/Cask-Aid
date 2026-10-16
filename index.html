@@ -42,6 +42,11 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
 @media(max-width:1120px){.app-shell{grid-template-columns:220px minmax(0,1fr)}.search-row{grid-template-columns:1.4fr 1fr 1fr;}.search-row .field:nth-child(4){grid-column:auto}.search-row .primary{grid-column:1/-1}.bottle-grid,.collection-list{grid-template-columns:repeat(2,minmax(0,1fr))}.state-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:780px){.app-shell{display:block}.sidebar{display:none}.main{padding:21px 15px 92px}.topbar{margin-bottom:20px}.top-actions .primary{display:none}.hero{grid-template-columns:1fr;min-height:0}.hero-art{display:none}.hero h2{max-width:420px}.stats{gap:9px;margin:13px 0 24px}.stat{padding:13px}.stat-value{font-size:24px}.search-panel{padding:14px}.search-row{grid-template-columns:1fr 1fr}.search-row .field:first-child{grid-column:1/-1}.search-row .primary{grid-column:1/-1}.filter-note{width:100%;margin:0}.state-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.bottle-grid,.collection-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bottle-art{height:115px}.bottle-body{padding:12px}.bottle-body h3{font-size:14px}.price{font-size:20px}.content-grid,.community-grid{grid-template-columns:1fr}.watch-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}.watch-row .watch-col-hide{display:none}.mobile-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;gap:2px;background:#fffdf8f5;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 5px max(8px,env(safe-area-inset-bottom));z-index:20}.mobile-nav button{border:0;background:none;color:#777b70;display:flex;flex-direction:column;gap:4px;align-items:center;flex:1;font-size:9px;font-weight:800;padding:5px 1px}.mobile-nav button span{font-size:19px}.mobile-nav button.active{color:var(--green)}.section-head{margin-top:24px}.topbar h1{font-size:28px}}
 @media(max-width:420px){.bottle-grid,.collection-list{grid-template-columns:1fr 1fr}.bottle-art{height:100px}.bottle-body h3{font-size:13px}.price-line{align-items:start;flex-direction:column;gap:5px}.state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-grid{grid-template-columns:1fr}.modal-grid .wide{grid-column:auto}.hero-actions .primary,.hero-actions .secondary{flex:1}.stat-top{font-size:10px}}
+
+/* Visible build marker: update this value with every published build. */
+.app-version{position:fixed;right:12px;bottom:10px;z-index:19;padding:6px 10px;border:1px solid #d8d2c4;border-radius:999px;background:#fffdf8ed;color:#656b60;font-size:10px;font-weight:750;letter-spacing:.25px;box-shadow:0 3px 12px #292b2210;backdrop-filter:blur(8px)}
+@media(max-width:780px){.app-version{bottom:68px;right:8px;font-size:9px;padding:5px 8px}}
+
 </style>
 </head>
 <body>
@@ -247,5 +252,6 @@ function resetDemo(){if(!confirm("Reset the prototype data to its original sampl
 document.getElementById("productSearch").addEventListener("input",renderBottles);["typeFilter","distanceFilter","maxPrice","inStockOnly","communityOnly"].forEach(id=>document.getElementById(id).addEventListener("change",renderBottles));
 navInit();renderStates();updateStateSummary();renderBottles();renderMission();renderWatchlist();renderCollection();renderPosts();updateStats();
 </script>
+<div class="app-version" id="appVersion" aria-label="Application version">Cask Aid · Version 0.2.1</div>
 </body>
 </html>
