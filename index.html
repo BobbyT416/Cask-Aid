@@ -127,7 +127,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
           <div class="field"><label for="typeFilter">Spirit type</label><select id="typeFilter"><option value="all">All whiskey</option><option>Bourbon</option><option>Rye</option><option>Scotch</option><option>Irish Whiskey</option></select></div>
           <div class="field"><label for="distanceFilter">Max distance</label><select id="distanceFilter"><option value="25">25 miles</option><option value="50">50 miles</option><option value="100" selected>100 miles</option><option value="150">150 miles</option><option value="250">250 miles</option><option value="500">500 miles</option></select></div>
           <div class="field"><label for="maxPrice">Max price</label><select id="maxPrice"><option value="all">Any price</option><option value="40">Up to $40</option><option value="60">Up to $60</option><option value="100">Up to $100</option><option value="200">Up to $200</option></select></div>
-          <button class="primary" onclick="renderBottles()">Search ↗</button>
+          <button class="primary" onclick="searchMainCatalog()">Search ↗</button>
         </div>
         <div class="official-search-row">
         <div class="official-search-copy"><strong>Want current Pennsylvania listings?</strong> Demo cards are examples, not verified inventory. Search the official Fine Wine & Good Spirits site for live product listings and store availability.</div>
@@ -137,12 +137,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
         <div class="state-box" id="stateBox"><div class="state-head"><span>Choose states to search</span><div class="state-actions"><button onclick="selectAllStates(true)">Select all</button><button onclick="selectAllStates(false)">Clear</button></div></div><div class="state-grid" id="stateGrid"></div></div>
       </div>
       
-      <section class="live-catalog" aria-labelledby="liveCatalogTitle">
-        <div class="live-catalog-head"><div><h2 id="liveCatalogTitle">Nationwide bottle catalog</h2><p>Search real bottle records from a public whisky catalog. This is bottle information—not store inventory.</p></div><span class="live-source">LIVE CATALOG</span></div>
-        <form class="live-search-row" id="liveCatalogForm" onsubmit="searchLiveCatalog(event)"><input id="liveCatalogQuery" type="search" placeholder="Search bourbon, rye, Scotch, brand, or bottle…" aria-label="Search nationwide bottle catalog" required /><button class="primary" id="liveCatalogButton" type="submit">Search catalog</button></form>
-        <p class="live-catalog-status" id="liveCatalogStatus" role="status">Search the nationwide catalog to load real bottle records. Store prices and availability are not provided by this source.</p>
+      <section class="live-catalog live-catalog-compact" aria-labelledby="liveCatalogTitle">
+        <div class="live-catalog-head"><div><h2 id="liveCatalogTitle">Bottle catalog results</h2><p>Real bottle records from a public catalog. Results do not indicate store inventory.</p></div><span class="live-source">LIVE CATALOG</span></div>
+        <input id="liveCatalogQuery" type="hidden" value="" />
+        <button class="primary" id="liveCatalogButton" type="button" hidden>Search catalog</button>
+        <p class="live-catalog-status" id="liveCatalogStatus" role="status">Enter a bottle or brand above and select Search to look up real catalog records.</p>
         <div class="live-catalog-results" id="liveCatalogResults"></div>
-        <p class="live-catalog-note">Catalog source: <a href="https://peated.com/about/api" target="_blank" rel="noopener noreferrer">Peated public API</a>. Results and ratings belong to that catalog. Cask Aid has not independently verified every record. Retail availability will be added separately when reliable sources are available.</p>
+        <p class="live-catalog-note">Source: <a href="https://peated.com/about/api" target="_blank" rel="noopener noreferrer">Peated public API</a>. Catalog records and ratings are not independently verified by Cask Aid. Retail availability is separate.</p>
       </section>
 
       <div class="results-meta"><div><strong id="resultCount">6 bottles found</strong><span id="resultSubtitle"> · Across your selected states</span></div><select class="sort-select" id="sortFilter" onchange="renderBottles()"><option value="recommended">Sort: Recommended</option><option value="price">Price: Low to high</option><option value="distance">Distance: Near to far</option><option value="name">Name: A to Z</option></select></div>
@@ -311,13 +312,15 @@ function renderBottles(){
 }
 function cardHTML(b){let saved=watchlist.includes(b.id),stockLabel=b.confidence==="community"?"Community sighting":b.confidence==="listed"?"Listed online":"Check availability";return `<article class="bottle-card"><div class="bottle-art ${b.color||"gold"}"><span class="bottle-tag">${esc(b.tag||b.type)}</span><button class="heart ${saved?"saved":""}" title="${saved?"Remove from":"Add to"} watchlist" onclick="toggleWatch(${b.id})">${saved?"♥":"♡"}</button>${bottleArt(b.color,b.brand)}</div><div class="bottle-body"><div class="bottle-type">${esc(b.type)} · ${b.proof} proof</div><h3>${esc(b.name)}</h3><div class="bottle-sub">${esc(b.brand)} · ${esc(b.size)}</div><div class="price-line"><div class="price">${money(b.price)} <small>/ bottle</small></div><span class="price-badge">${b.distance<25?"Nearby":b.distance<75?"Worth a look":"Road trip"}</span></div><div class="store-row"><div class="store-pin">⌖</div><div class="store-info"><strong>${esc(b.store)}</strong><small>${esc(b.city)} · ${b.distance} mi</small></div><span class="availability" style="color:${b.confidence==="unknown"?"#8b6a2b":"#387345"}">${stockLabel}</span></div><div class="card-actions"><button class="primary small-btn" onclick="showBottle(${b.id})">Bottle details</button><button class="ghost small-btn" onclick="addToMission(${b.id})">＋ Hunt</button></div></div></article>`}
 
+function searchMainCatalog(){const main=document.getElementById("productSearch"),live=document.getElementById("liveCatalogQuery");if(!main.value.trim()){toast("Enter a bottle or brand to search.");main.focus();return;}live.value=main.value.trim();searchLiveCatalog();document.getElementById("liveCatalogStatus").scrollIntoView({behavior:"smooth",block:"nearest"});}
+
 async function searchLiveCatalog(event){
  if(event)event.preventDefault();
  const input=document.getElementById("liveCatalogQuery"),button=document.getElementById("liveCatalogButton"),status=document.getElementById("liveCatalogStatus"),results=document.getElementById("liveCatalogResults");
  const query=input.value.trim();if(!query)return;
  button.disabled=true;button.textContent="Searching…";status.textContent="Searching the live bottle catalog…";results.innerHTML="";
  try{
-  const response=await fetch("https://api.peated.com/v1/bottles?query="+encodeURIComponent(query)+"&limit=20",{headers:{Accept:"application/json"}});
+  const response=await fetch("https://cask-aid-catalog.rtriola.workers.dev/search?q="+encodeURIComponent(query),{headers:{Accept:"application/json"}});
   if(!response.ok)throw new Error("Catalog returned HTTP "+response.status);
   const payload=await response.json();const rows=Array.isArray(payload.results)?payload.results:(Array.isArray(payload.bottles)?payload.bottles:[]);
   if(!rows.length){status.textContent="No matching bottles were returned. Try a shorter name, brand, or whiskey style.";return;}
