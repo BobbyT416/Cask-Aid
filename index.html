@@ -63,6 +63,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
 .official-search-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.official-search-copy{font-size:11px;line-height:1.45;color:var(--muted);max-width:520px}.official-search-copy strong{color:var(--ink);display:block;font-size:12px;margin-bottom:2px}.official-search-button{white-space:nowrap}
 .app-version{position:fixed;right:12px;bottom:10px;z-index:19;padding:6px 10px;border:1px solid #d8d2c4;border-radius:999px;background:#fffdf8ed;color:#656b60;font-size:10px;font-weight:750;letter-spacing:.25px;box-shadow:0 3px 12px #292b2210;backdrop-filter:blur(8px)}
 @media(max-width:780px){.app-version{bottom:68px;right:8px;font-size:9px;padding:5px 8px}}
+
+/* Nationwide live bottle catalog */
+.live-catalog{margin:18px 0 22px;padding:18px;background:#fffdf8;border:1px solid #d8c39c;border-radius:18px;box-shadow:0 4px 18px #292b2205}.live-catalog-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.live-catalog-head h2{font-size:20px;margin:0 0 5px;letter-spacing:-.5px}.live-catalog-head p{font-size:12px;color:#777b70;line-height:1.5;margin:0}.live-source{font-size:10px;white-space:nowrap;background:#edf1e4;color:#315a38;border-radius:8px;padding:7px 9px;font-weight:850}.live-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.live-search-row input{width:100%;min-width:0;border:1px solid #ddd8cc;background:#fffefa;padding:12px;border-radius:11px}.live-catalog-status{font-size:12px;color:#777b70;margin:11px 0 0;line-height:1.5}.live-catalog-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.live-bottle{padding:13px;border:1px solid #e5e0d4;border-radius:12px;background:#fff}.live-bottle h3{font-size:14px;line-height:1.3;margin:0 0 5px}.live-bottle p{font-size:11px;line-height:1.5;color:#777b70;margin:0}.live-bottle .live-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.live-bottle .live-meta span{font-size:10px;background:#f2f0e8;border-radius:6px;padding:5px 7px;color:#53594e}.live-catalog-note{font-size:10px;color:#777b70;line-height:1.5;margin:12px 0 0}.live-catalog button:disabled{opacity:.6;cursor:wait}
+@media(max-width:650px){.live-catalog{padding:14px}.live-catalog-head{display:block}.live-source{display:inline-block;margin-top:9px}.live-catalog-results{grid-template-columns:1fr}.live-search-row{grid-template-columns:1fr}.live-search-row button{width:100%}}
 </style>
 </head>
 <body>
@@ -132,6 +136,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
       <div class="filters"><button class="filter-chip" onclick="toggleStates()">☷ <span id="stateSummary">Pennsylvania, Ohio, West Virginia</span> <span>⌄</span></button><label class="filter-chip"><input id="inStockOnly" type="checkbox" /> In-stock reports only</label><label class="filter-chip"><input id="communityOnly" type="checkbox" /> Include community sightings</label><span class="filter-note">Location: Pittsburgh, PA · <button class="text-btn" style="padding:0" onclick="toast('ZIP code editing will be available in the next prototype pass.')">Change</button></span></div>
         <div class="state-box" id="stateBox"><div class="state-head"><span>Choose states to search</span><div class="state-actions"><button onclick="selectAllStates(true)">Select all</button><button onclick="selectAllStates(false)">Clear</button></div></div><div class="state-grid" id="stateGrid"></div></div>
       </div>
+      
+      <section class="live-catalog" aria-labelledby="liveCatalogTitle">
+        <div class="live-catalog-head"><div><h2 id="liveCatalogTitle">Nationwide bottle catalog</h2><p>Search real bottle records from a public whisky catalog. This is bottle information—not store inventory.</p></div><span class="live-source">LIVE CATALOG</span></div>
+        <form class="live-search-row" id="liveCatalogForm" onsubmit="searchLiveCatalog(event)"><input id="liveCatalogQuery" type="search" placeholder="Search bourbon, rye, Scotch, brand, or bottle…" aria-label="Search nationwide bottle catalog" required /><button class="primary" id="liveCatalogButton" type="submit">Search catalog</button></form>
+        <p class="live-catalog-status" id="liveCatalogStatus" role="status">Search the nationwide catalog to load real bottle records. Store prices and availability are not provided by this source.</p>
+        <div class="live-catalog-results" id="liveCatalogResults"></div>
+        <p class="live-catalog-note">Catalog source: <a href="https://peated.com/about/api" target="_blank" rel="noopener noreferrer">Peated public API</a>. Results and ratings belong to that catalog. Cask Aid has not independently verified every record. Retail availability will be added separately when reliable sources are available.</p>
+      </section>
+
       <div class="results-meta"><div><strong id="resultCount">6 bottles found</strong><span id="resultSubtitle"> · Across your selected states</span></div><select class="sort-select" id="sortFilter" onchange="renderBottles()"><option value="recommended">Sort: Recommended</option><option value="price">Price: Low to high</option><option value="distance">Distance: Near to far</option><option value="name">Name: A to Z</option></select></div>
       <div class="bottle-grid" id="bottleGrid"></div>
       <div class="section-head"><div><h2>Your hunt, at a glance</h2><p>Keep an eye on your current mission and recent finds.</p></div><button class="text-btn" onclick="goPage('mission')">Open hunt planner →</button></div>
@@ -297,7 +310,36 @@ function renderBottles(){
  document.getElementById("bottleGrid").innerHTML=arr.length?arr.map(b=>cardHTML(b)).join(""):`<div class="empty" style="grid-column:1/-1"><div style="font-size:28px">⌕</div><strong>No bottles matched this search.</strong><p>Try a wider distance, a different price limit, or add more states.</p><button class="ghost" onclick="clearFilters()">Clear filters</button></div>`;
 }
 function cardHTML(b){let saved=watchlist.includes(b.id),stockLabel=b.confidence==="community"?"Community sighting":b.confidence==="listed"?"Listed online":"Check availability";return `<article class="bottle-card"><div class="bottle-art ${b.color||"gold"}"><span class="bottle-tag">${esc(b.tag||b.type)}</span><button class="heart ${saved?"saved":""}" title="${saved?"Remove from":"Add to"} watchlist" onclick="toggleWatch(${b.id})">${saved?"♥":"♡"}</button>${bottleArt(b.color,b.brand)}</div><div class="bottle-body"><div class="bottle-type">${esc(b.type)} · ${b.proof} proof</div><h3>${esc(b.name)}</h3><div class="bottle-sub">${esc(b.brand)} · ${esc(b.size)}</div><div class="price-line"><div class="price">${money(b.price)} <small>/ bottle</small></div><span class="price-badge">${b.distance<25?"Nearby":b.distance<75?"Worth a look":"Road trip"}</span></div><div class="store-row"><div class="store-pin">⌖</div><div class="store-info"><strong>${esc(b.store)}</strong><small>${esc(b.city)} · ${b.distance} mi</small></div><span class="availability" style="color:${b.confidence==="unknown"?"#8b6a2b":"#387345"}">${stockLabel}</span></div><div class="card-actions"><button class="primary small-btn" onclick="showBottle(${b.id})">Bottle details</button><button class="ghost small-btn" onclick="addToMission(${b.id})">＋ Hunt</button></div></div></article>`}
-function searchOfficialFWGS(){const q=document.getElementById("productSearch").value.trim();const url="https://www.finewineandgoodspirits.com/search"+(q?"?Ntt="+encodeURIComponent(q):"");window.open(url,"_blank","noopener,noreferrer");}
+
+async function searchLiveCatalog(event){
+ if(event)event.preventDefault();
+ const input=document.getElementById("liveCatalogQuery"),button=document.getElementById("liveCatalogButton"),status=document.getElementById("liveCatalogStatus"),results=document.getElementById("liveCatalogResults");
+ const query=input.value.trim();if(!query)return;
+ button.disabled=true;button.textContent="Searching…";status.textContent="Searching the live bottle catalog…";results.innerHTML="";
+ try{
+  const response=await fetch("https://api.peated.com/v1/bottles?query="+encodeURIComponent(query)+"&limit=20",{headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("Catalog returned HTTP "+response.status);
+  const payload=await response.json();const rows=Array.isArray(payload.results)?payload.results:(Array.isArray(payload.bottles)?payload.bottles:[]);
+  if(!rows.length){status.textContent="No matching bottles were returned. Try a shorter name, brand, or whiskey style.";return;}
+  const fmtCategory=v=>String(v||"Whiskey").replace(/_/g," ").replace(/\b\w/g,ch=>ch.toUpperCase());
+  results.innerHTML=rows.map(b=>{
+   const name=b.fullName||[b.brand&&b.brand.name,b.name].filter(Boolean).join(" ")||b.name||"Unnamed bottle";
+   const brand=b.brand&&b.brand.name?b.brand.name:"";
+   const cat=fmtCategory(b.category||(b.group&&b.group.category));
+   const age=b.statedAge!=null&&Number(b.statedAge)>0?Number(b.statedAge)+" year age statement":"";
+   const abv=b.abv!=null?Number(b.abv)+"% ABV":"";
+   const proof=b.abv!=null?Math.round(Number(b.abv)*2)+" proof":"";
+   const score=b.medianScore!=null?"Catalog score "+b.medianScore+"/100":"";
+   const ratings=b.scoreCount?Number(b.scoreCount)+" ratings":"";
+   const id=b.peatedId||"";
+   const meta=[cat,age,abv,proof,score,ratings].filter(Boolean);
+   return '<article class="live-bottle"><h3>'+esc(name)+'</h3><p>'+esc([brand&&brand!==name?brand:"",id?"Catalog ID "+id:""].filter(Boolean).join(" · ")||"Bottle record")+'</p><div class="live-meta">'+meta.map(v=>'<span>'+esc(v)+'</span>').join("")+'</div></article>';
+  }).join("");
+  status.textContent="Loaded "+rows.length+" real catalog record"+(rows.length===1?"":"s")+" for “"+query+"”. No prices or store stock are implied.";
+ }catch(err){status.textContent="The live catalog could not be reached from this browser right now. Please try again shortly. Existing bottle search remains available, but those sample listings are not live inventory.";}
+ finally{button.disabled=false;button.textContent="Search catalog";}
+}
+\nfunction searchOfficialFWGS(){const q=document.getElementById("productSearch").value.trim();const url="https://www.finewineandgoodspirits.com/search"+(q?"?Ntt="+encodeURIComponent(q):"");window.open(url,"_blank","noopener,noreferrer");}
 function clearFilters(){document.getElementById("productSearch").value="";document.getElementById("typeFilter").value="all";document.getElementById("distanceFilter").value="100";document.getElementById("maxPrice").value="all";document.getElementById("inStockOnly").checked=false;document.getElementById("communityOnly").checked=false;renderBottles()}
 function toggleWatch(id){if(watchlist.includes(id)){watchlist=watchlist.filter(x=>x!==id);toast("Removed from your watchlist.")}else{watchlist.push(id);toast("Added to your watchlist.")}save("caskaid_watchlist",watchlist);renderBottles();renderWatchlist();updateStats()}
 function showBottle(id){let b=bottles.find(x=>x.id===id);openModal(b.name,"Sample listing details and information confidence.",`<div style="display:flex;gap:18px;align-items:center;margin-bottom:18px"><div class="bottle-art ${b.color}" style="width:120px;height:145px;border-radius:13px;flex-shrink:0">${bottleArt(b.color,b.brand)}</div><div><div class="bottle-type">${esc(b.type)} · ${b.proof} proof</div><h3 style="font-size:20px;margin:7px 0">${esc(b.name)}</h3><div style="font-size:12px;color:var(--muted)">${esc(b.brand)} · ${esc(b.size)}</div><div style="font-size:25px;font-weight:900;margin-top:12px">${money(b.price)}</div></div></div><div class="panel" style="padding:14px;margin-bottom:14px"><strong style="font-size:12px">${esc(b.store)}</strong><div style="font-size:12px;color:var(--muted);margin-top:5px">${esc(b.city)} · ${b.distance} miles from sample starting point</div><div style="font-size:12px;margin-top:10px"><strong>Listing status:</strong> ${esc(b.availability)}</div><div style="font-size:11px;color:var(--muted);margin-top:7px">This is fictional prototype data. No live inventory verification has occurred.</div></div><p style="font-size:13px;line-height:1.5">${esc(b.notes)}</p><div class="modal-actions"><button class="ghost" onclick="closeModal()">Close</button><button class="primary" onclick="toggleWatch(${id});closeModal()">♡ ${watchlist.includes(id)?"Update watchlist":"Add to watchlist"}</button><button class="secondary" onclick="addToMission(${id});closeModal()">＋ Add to hunt</button></div>`)}
