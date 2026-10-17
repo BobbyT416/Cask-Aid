@@ -321,7 +321,7 @@ async function searchLiveCatalog(event){
   if(!response.ok)throw new Error("Catalog returned HTTP "+response.status);
   const payload=await response.json();const rows=Array.isArray(payload.results)?payload.results:(Array.isArray(payload.bottles)?payload.bottles:[]);
   if(!rows.length){status.textContent="No matching bottles were returned. Try a shorter name, brand, or whiskey style.";return;}
-  const fmtCategory=v=>String(v||"Whiskey").replace(/_/g," ").replace(/\\b\\w/g,ch=>ch.toUpperCase());
+  const fmtCategory=v=>String(v||"Whiskey").replace(/_/g," ").replace(/\b\w/g,ch=>ch.toUpperCase());
   results.innerHTML=rows.map(b=>{
    const name=b.fullName||[b.brand&&b.brand.name,b.name].filter(Boolean).join(" ")||b.name||"Unnamed bottle";
    const brand=b.brand&&b.brand.name?b.brand.name:"";
